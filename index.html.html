@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bizsim.AI — Automatizaciones con IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF5C00;
+    --orange-bright: #FF7A2F;
+    --orange-glow: #FF5C0044;
+    --black: #0A0A0A;
+    --black-mid: #111111;
+    --black-card: #161616;
+    --white: #F5F0EB;
+    --gray: #888;
+    --border: #222;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    mix-blend-mode: normal;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.15s ease, width 0.2s, height 0.2s;
+    opacity: 0.5;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  /* GRID BACKGROUND */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid #1a1a1a;
+    backdrop-filter: blur(16px);
+    background: rgba(10,10,10,0.85);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--white);
+  }
+  .logo span { color: var(--orange); }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .nav-links a {
+    color: var(--gray);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--orange); }
+
+  .nav-cta {
+    background: var(--orange);
+    color: var(--black);
+    border: none;
+    padding: 10px 24px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.2s, transform 0.1s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .nav-cta:hover { background: var(--orange-bright); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 140px 48px 80px;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 11vw, 160px);
+    line-height: 0.92;
+    letter-spacing: -1px;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero-title em {
+    font-style: normal;
+    color: var(--orange);
+    position: relative;
+    display: inline-block;
+  }
+  .hero-title em::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 0; right: 0;
+    height: 4px;
+    background: var(--orange);
+    opacity: 0.4;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--gray);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    background: var(--orange);
+    color: var(--black);
+    border: none;
+    padding: 16px 36px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: none;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    transition: transform 0.2s;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .btn-primary:hover::before { transform: translateX(0); }
+  .btn-primary:hover { transform: translateY(-2px); }
+
+  .btn-secondary {
+    color: var(--white);
+    background: transparent;
+    border: 1px solid #333;
+    padding: 16px 36px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* ORANGE ORB */
+  .orb {
+    position: absolute;
+    right: -100px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--orange) 0%, transparent 70%);
+    opacity: 0.08;
+    pointer-events: none;
+    animation: pulse 4s ease-in-out infinite;
+  }
+  .orb2 {
+    position: absolute;
+    right: 200px;
+    top: 40%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, var(--orange-bright) 0%, transparent 70%);
+    opacity: 0.06;
+    pointer-events: none;
+    animation: pulse 6s ease-in-out infinite reverse;
+  }
+
+  /* HERO VISUAL */
+  .hero-visual {
+    position: absolute;
+    right: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 480px;
+    opacity: 0;
+    animation: fadeIn 1.2s 1s forwards;
+  }
+
+  .terminal {
+    background: var(--black-card);
+    border: 1px solid #222;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+  .terminal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--orange);
+    box-shadow: 0 0 20px var(--orange);
+  }
+  .terminal-bar {
+    background: #111;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FFBD2E; }
+  .dot.g { background: #28CA41; }
+  .terminal-title {
+    margin-left: 8px;
+    color: #555;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .terminal-body {
+    padding: 20px;
+    line-height: 1.9;
+  }
+  .t-gray { color: #555; }
+  .t-orange { color: var(--orange); }
+  .t-white { color: var(--white); }
+  .t-green { color: #5DFF8A; }
+  .t-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--orange);
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* STATS STRIP */
+  .stats-strip {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .stat-item {
+    padding: 40px 48px;
+    border-right: 1px solid #1a1a1a;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    color: var(--orange);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-inner {
+    padding: 100px 48px;
+  }
+
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--gray);
+    max-width: 500px;
+    line-height: 1.8;
+  }
+
+  /* SERVICES */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #1a1a1a;
+    margin-top: 64px;
+    border: 1px solid #1a1a1a;
+  }
+
+  .service-card {
+    background: var(--black-card);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 0;
+    background: var(--orange);
+    transition: height 0.4s ease;
+  }
+  .service-card:hover::before { height: 100%; }
+  .service-card:hover { background: #1a1a1a; }
+
+  .service-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--orange-glow);
+    border: 1px solid #FF5C0033;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 28px;
+  }
+
+  .service-num {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: #1e1e1e;
+    line-height: 1;
+  }
+
+  .service-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .service-desc {
+    font-size: 14px;
+    color: var(--gray);
+    line-height: 1.8;
+  }
+
+  /* HOW IT WORKS */
+  .how-section {
+    background: var(--black-mid);
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 64px;
+  }
+
+  .step {
+    padding: 40px 32px;
+    border-right: 1px solid #222;
+    position: relative;
+  }
+  .step:last-child { border-right: none; }
+
+  .step-arrow {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--orange);
+    font-size: 18px;
+    z-index: 2;
+  }
+  .step:last-child .step-arrow { display: none; }
+
+  .step-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    color: #222;
+    line-height: 1;
+    margin-bottom: 16px;
+    transition: color 0.3s;
+  }
+  .step:hover .step-number { color: var(--orange); opacity: 0.4; }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.8;
+  }
+
+  /* FEATURES */
+  .features-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-top: 64px;
+  }
+
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .feature-item {
+    padding: 28px 0;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    cursor: default;
+  }
+  .feature-item:first-child { border-top: 1px solid #1a1a1a; }
+
+  .feature-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--orange);
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .feature-text h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .feature-text p {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.7;
+  }
+
+  .dashboard-mock {
+    background: var(--black-card);
+    border: 1px solid #222;
+    padding: 32px;
+    position: relative;
+  }
+  .dashboard-mock::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--orange), transparent);
+  }
+
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .dash-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 2px;
+  }
+  .dash-badge {
+    background: #1a3a1a;
+    color: #5DFF8A;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    letter-spacing: 1px;
+  }
+
+  .dash-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dash-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #111;
+    border: 1px solid #1a1a1a;
+  }
+  .row-icon { font-size: 16px; }
+  .row-info { flex: 1; }
+  .row-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .row-meta { font-size: 11px; color: var(--gray); font-family: 'JetBrains Mono', monospace; }
+  .row-bar-wrap {
+    width: 80px;
+    height: 4px;
+    background: #222;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .row-bar {
+    height: 100%;
+    background: var(--orange);
+    border-radius: 2px;
+    animation: growBar 2s ease-out forwards;
+  }
+  .row-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--orange); }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+  }
+
+  .pricing-card {
+    border: 1px solid #222;
+    padding: 40px;
+    background: var(--black-card);
+    position: relative;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .pricing-card:hover { border-color: #333; transform: translateY(-4px); }
+  .pricing-card.featured {
+    border-color: var(--orange);
+    background: #111;
+  }
+  .pricing-card.featured::before {
+    content: 'MÁS POPULAR';
+    position: absolute;
+    top: -1px; right: 32px;
+    background: var(--orange);
+    color: var(--black);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+  }
+
+  .plan-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--orange);
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+  }
+  .plan-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .plan-price sup {
+    font-size: 28px;
+    vertical-align: top;
+    margin-top: 10px;
+    display: inline-block;
+  }
+  .plan-period { font-size: 13px; color: var(--gray); margin-bottom: 32px; }
+
+  .plan-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .plan-features li {
+    font-size: 14px;
+    color: var(--gray);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .plan-features li::before {
+    content: '→';
+    color: var(--orange);
+    flex-shrink: 0;
+  }
+
+  .btn-plan {
+    width: 100%;
+    padding: 14px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.2s;
+    border: 1px solid #333;
+    background: transparent;
+    color: var(--white);
+  }
+  .btn-plan:hover { border-color: var(--orange); color: var(--orange); }
+  .pricing-card.featured .btn-plan {
+    background: var(--orange);
+    color: var(--black);
+    border-color: var(--orange);
+  }
+  .pricing-card.featured .btn-plan:hover { background: var(--orange-bright); }
+
+  /* CTA SECTION */
+  .cta-section {
+    background: var(--orange);
+    padding: 100px 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: 'BIZSIM';
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 300px;
+    color: rgba(0,0,0,0.08);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .cta-section .section-title { color: var(--black); }
+  .cta-section p { color: rgba(0,0,0,0.6); font-size: 17px; max-width: 500px; margin: 16px auto 40px; line-height: 1.7; }
+  .btn-cta-dark {
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    padding: 18px 48px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .btn-cta-dark:hover { background: #222; transform: translateY(-2px); }
+
+  /* FOOTER */
+  footer {
+    padding: 60px 48px;
+    border-top: 1px solid #1a1a1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .footer-left .logo { font-size: 22px; margin-bottom: 8px; }
+  .footer-tagline { font-size: 12px; color: var(--gray); }
+  .footer-links { display: flex; gap: 28px; }
+  .footer-links a { color: #555; font-size: 12px; text-decoration: none; letter-spacing: 1px; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--orange); }
+  .footer-copy { font-size: 11px; color: #333; font-family: 'JetBrains Mono', monospace; }
+
+  /* MARQUEE */
+  .marquee-wrap {
+    border-top: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    overflow: hidden;
+    padding: 16px 0;
+    background: #0d0d0d;
+    position: relative;
+    z-index: 1;
+  }
+  .marquee-track {
+    display: flex;
+    gap: 0;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+  .marquee-item {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #333;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+  .marquee-item span { color: var(--orange); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: translateY(-50%) scale(1); }
+    50% { transform: translateY(-50%) scale(1.1); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes growBar {
+    from { width: 0; }
+  }
+  @keyframes scanline {
+    from { top: -100%; }
+    to { top: 100%; }
+  }
+
+  /* REVEAL ON SCROLL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .hero-visual { display: none; }
+    .services-grid { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .features-layout { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .stats-strip { grid-template-columns: 1fr 1fr; }
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .hero, .section-inner { padding-left: 24px; padding-right: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Bizsim<span>.AI</span></div>
+  <ul class="nav-links">
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#proceso">Proceso</a></li>
+    <li><a href="#funciones">Funciones</a></li>
+    <li><a href="#precios">Precios</a></li>
+  </ul>
+  <button class="nav-cta" onclick="openModal()">Me Interesa</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="orb"></div>
+  <div class="orb2"></div>
+  <div class="hero-label">// Sistema de Automatización Inteligente</div>
+  <h1 class="hero-title">
+    Tu negocio<br>
+    en modo<br>
+    <em>piloto auto</em>
+  </h1>
+  <p class="hero-sub">
+    Automatizamos tus procesos empresariales con Inteligencia Artificial. Menos trabajo manual, más resultados. Escala sin límites.
+  </p>
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="openModal()">Me Interesa</button>
+    <button class="btn-secondary" onclick="openModal()">Me Interesa</button>
+  </div>
+
+  <div class="hero-visual">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <span class="terminal-title">bizsim_agent.py</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-gray">$</span> <span class="t-orange">bizsim</span> <span class="t-white">--init production</span></div>
+        <div><span class="t-gray">▸ Cargando agentes IA...</span></div>
+        <div><span class="t-green">✓ Email automation</span> <span class="t-gray">activo</span></div>
+        <div><span class="t-green">✓ Lead scoring</span> <span class="t-gray">activo</span></div>
+        <div><span class="t-green">✓ Reportes automáticos</span> <span class="t-gray">activo</span></div>
+        <div><span class="t-green">✓ CRM sync</span> <span class="t-gray">activo</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-orange">▸ 847 tareas procesadas hoy</span></div>
+        <div><span class="t-gray">▸ Ahorro estimado: </span><span class="t-white">23.4h</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-gray">Sistema operando al </span><span class="t-orange">100%</span> <span class="t-cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-item">
+    <div class="stat-num">97%</div>
+    <div class="stat-label">Reducción de tareas manuales</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">10X</div>
+    <div class="stat-label">Mayor velocidad operativa</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">500+</div>
+    <div class="stat-label">Empresas automatizadas</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">48H</div>
+    <div class="stat-label">Implementación promedio</div>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="marquee-item">AUTOMATIZACIÓN <span>✦</span> INTELIGENCIA ARTIFICIAL <span>✦</span> WORKFLOWS <span>✦</span> ESCALABILIDAD <span>✦</span> EFICIENCIA <span>✦</span> INNOVACIÓN <span>✦</span></div>
+    <div class="marquee-item">AUTOMATIZACIÓN <span>✦</span> INTELIGENCIA ARTIFICIAL <span>✦</span> WORKFLOWS <span>✦</span> ESCALABILIDAD <span>✦</span> EFICIENCIA <span>✦</span> INNOVACIÓN <span>✦</span></div>
+  </div>
+</div>
+
+<!-- SERVICIOS -->
+<section id="servicios">
+  <div class="section-inner">
+    <div class="section-tag reveal">// 001 — Servicios</div>
+    <h2 class="section-title reveal">Lo que<br>automatizamos</h2>
+    <p class="section-sub reveal">Cada flujo de trabajo, cada proceso repetitivo, cada oportunidad perdida — convertida en automatización inteligente.</p>
+    
+    <div class="services-grid reveal">
+      <div class="service-card">
+        <div class="service-num">01</div>
+        <div class="service-icon">⚡</div>
+        <h3 class="service-name">Automatización de Ventas</h3>
+        <p class="service-desc">Scoring de leads, seguimiento automático, propuestas personalizadas y cierre asistido por IA sin intervención humana.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-num">02</div>
+        <div class="service-icon">📧</div>
+        <h3 class="service-name">Email & Comunicación</h3>
+        <p class="service-desc">Secuencias de email inteligentes, respuestas automáticas contextuales y clasificación de bandeja de entrada con IA.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-num">03</div>
+        <div class="service-icon">📊</div>
+        <h3 class="service-name">Reportes & Analytics</h3>
+        <p class="service-desc">Dashboards en tiempo real, reportes generados automáticamente y alertas inteligentes que actúan antes que tú.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-num">04</div>
+        <div class="service-icon">🤖</div>
+        <h3 class="service-name">Agentes IA Custom</h3>
+        <p class="service-desc">Asistentes virtuales entrenados con el conocimiento de tu empresa para atención al cliente 24/7 sin errores.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-num">05</div>
+        <div class="service-icon">🔗</div>
+        <h3 class="service-name">Integración de Sistemas</h3>
+        <p class="service-desc">Conectamos todos tus sistemas — CRM, ERP, ecommerce — para que los datos fluyan sin fricción entre plataformas.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-num">06</div>
+        <div class="service-icon">📋</div>
+        <h3 class="service-name">Gestión Documental</h3>
+        <p class="service-desc">Extracción, clasificación y procesamiento automático de facturas, contratos y documentos con precisión del 99.9%.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESO -->
+<section id="proceso" class="how-section">
+  <div class="section-inner">
+    <div class="section-tag reveal">// 002 — Proceso</div>
+    <h2 class="section-title reveal">Cómo funciona</h2>
+    <p class="section-sub reveal">De la consulta al sistema corriendo en producción en menos de 48 horas.</p>
+
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-arrow">→</div>
+        <div class="step-number">01</div>
+        <h4 class="step-title">Diagnóstico</h4>
+        <p class="step-desc">Analizamos tus procesos actuales e identificamos dónde la IA genera mayor impacto en tu negocio.</p>
+      </div>
+      <div class="step">
+        <div class="step-arrow">→</div>
+        <div class="step-number">02</div>
+        <h4 class="step-title">Diseño</h4>
+        <p class="step-desc">Diseñamos los workflows de automatización a medida, adaptados a tus herramientas y equipo existente.</p>
+      </div>
+      <div class="step">
+        <div class="step-arrow">→</div>
+        <div class="step-number">03</div>
+        <h4 class="step-title">Implementación</h4>
+        <p class="step-desc">Desplegamos los agentes IA, integramos con tus sistemas y validamos cada flujo antes de activar.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">04</div>
+        <h4 class="step-title">Optimización</h4>
+        <p class="step-desc">Monitorizamos el rendimiento y mejoramos continuamente los modelos con datos reales de tu operación.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="funciones">
+  <div class="section-inner">
+    <div class="section-tag reveal">// 003 — Funciones</div>
+    <h2 class="section-title reveal">Por qué<br>Bizsim.AI</h2>
+
+    <div class="features-layout">
+      <div class="feature-list reveal">
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text">
+            <h4>Sin código. Sin fricción.</h4>
+            <p>No necesitas un equipo técnico. Nuestros especialistas configuran todo por ti en tiempo récord.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text">
+            <h4>Modelos entrenados con tu negocio</h4>
+            <p>Los agentes aprenden el vocabulario, tono y procesos específicos de tu empresa para actuar como un empleado más.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text">
+            <h4>Integración con 200+ herramientas</h4>
+            <p>Slack, HubSpot, Notion, Gmail, Shopify, SAP y cualquier API. Si existe, lo conectamos.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text">
+            <h4>ROI medible desde el día 1</h4>
+            <p>Dashboard en tiempo real con horas ahorradas, errores evitados y valor generado por cada automatización.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text">
+            <h4>Soporte humano 24/7</h4>
+            <p>Un equipo dedicado que monitoriza tus automatizaciones y responde en menos de 2 horas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-mock reveal">
+        <div class="dash-header">
+          <div class="dash-title">BIZSIM DASHBOARD</div>
+          <div class="dash-badge">● LIVE</div>
+        </div>
+        <div class="dash-rows">
+          <div class="dash-row">
+            <div class="row-icon">📧</div>
+            <div class="row-info">
+              <div class="row-name">Email Automation</div>
+              <div class="row-meta">847 emails · hoy</div>
+            </div>
+            <div class="row-bar-wrap"><div class="row-bar" style="width:92%"></div></div>
+            <div class="row-val">92%</div>
+          </div>
+          <div class="dash-row">
+            <div class="row-icon">🎯</div>
+            <div class="row-info">
+              <div class="row-name">Lead Scoring</div>
+              <div class="row-meta">234 leads · procesados</div>
+            </div>
+            <div class="row-bar-wrap"><div class="row-bar" style="width:78%"></div></div>
+            <div class="row-val">78%</div>
+          </div>
+          <div class="dash-row">
+            <div class="row-icon">🤖</div>
+            <div class="row-info">
+              <div class="row-name">Agente Soporte</div>
+              <div class="row-meta">1.2k consultas · resueltas</div>
+            </div>
+            <div class="row-bar-wrap"><div class="row-bar" style="width:99%"></div></div>
+            <div class="row-val">99%</div>
+          </div>
+          <div class="dash-row">
+            <div class="row-icon">📊</div>
+            <div class="row-info">
+              <div class="row-name">Reportes BI</div>
+              <div class="row-meta">18 reportes · generados</div>
+            </div>
+            <div class="row-bar-wrap"><div class="row-bar" style="width:85%"></div></div>
+            <div class="row-val">85%</div>
+          </div>
+        </div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#555">HORAS AHORRADAS HOY</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--orange)">23.4h</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="precios" style="background:var(--black-mid);border-top:1px solid #1a1a1a">
+  <div class="section-inner">
+    <div class="section-tag reveal">// 004 — Precios</div>
+    <h2 class="section-title reveal">Planes simples,<br>resultados reales</h2>
+    <p class="section-sub reveal">Sin sorpresas. Sin contratos anuales. Cancela cuando quieras.</p>
+
+    <div class="pricing-grid reveal">
+      <div class="pricing-card">
+        <div class="plan-name">STARTER</div>
+        <div class="plan-price"><sup>€</sup>499</div>
+        <div class="plan-period">por mes</div>
+        <ul class="plan-features">
+          <li>3 automatizaciones activas</li>
+          <li>Hasta 5.000 ejecuciones/mes</li>
+          <li>Integración con 10 herramientas</li>
+          <li>Dashboard básico</li>
+          <li>Soporte en horario laboral</li>
+        </ul>
+        <button class="btn-plan" onclick="openModal('Starter')">Me Interesa</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="plan-name">GROWTH</div>
+        <div class="plan-price"><sup>€</sup>1.299</div>
+        <div class="plan-period">por mes</div>
+        <ul class="plan-features">
+          <li>Automatizaciones ilimitadas</li>
+          <li>Hasta 50.000 ejecuciones/mes</li>
+          <li>Integración con 200+ herramientas</li>
+          <li>Agente IA custom entrenado</li>
+          <li>Dashboard avanzado + alertas</li>
+          <li>Soporte prioritario 24/7</li>
+        </ul>
+        <button class="btn-plan" onclick="openModal('Growth')">Me Interesa</button>
+      </div>
+      <div class="pricing-card">
+        <div class="plan-name">ENTERPRISE</div>
+        <div class="plan-price">Custom</div>
+        <div class="plan-period">precio personalizado</div>
+        <ul class="plan-features">
+          <li>Todo de Growth, sin límites</li>
+          <li>Ejecuciones ilimitadas</li>
+          <li>Infraestructura dedicada</li>
+          <li>Múltiples agentes IA</li>
+          <li>SLA garantizado 99.99%</li>
+          <li>Account manager dedicado</li>
+        </ul>
+        <button class="btn-plan" onclick="openModal('Enterprise')">Me Interesa</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2 class="section-title">¿Listo para<br>automatizar?</h2>
+  <p>Únete a 500+ empresas que ya dejaron de perder tiempo en tareas repetitivas. Tu competencia ya está usando IA.</p>
+  <button class="btn-cta-dark" onclick="openModal()">Me Interesa →</button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <div class="logo">Bizsim<span style="color:var(--orange)">.AI</span></div>
+    <div class="footer-tagline">Automatizaciones IA para empresas que quieren escalar</div>
+  </div>
+  <div class="footer-links">
+    <a href="#">Privacidad</a>
+    <a href="#">Términos</a>
+    <a href="#">Blog</a>
+    <a href="#">Contacto</a>
+  </div>
+  <div class="footer-copy">© 2025 BIZSIM.AI — ALL RIGHTS RESERVED</div>
+</footer>
+
+<!-- MODAL FORMULARIO -->
+<div id="contactModal" style="
+  display:none;
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;
+  padding:20px;
+">
+  <div style="
+    background:var(--black-card);
+    border:1px solid #2a2a2a;
+    max-width:580px;width:100%;
+    position:relative;
+    overflow:hidden;
+    animation:fadeUp 0.4s forwards;
+  ">
+    <!-- Orange top bar -->
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);box-shadow:0 0 20px var(--orange);"></div>
+
+    <!-- Header -->
+    <div style="padding:36px 40px 28px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--orange);letter-spacing:4px;margin-bottom:6px;">// CONTACTO</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;">Cuéntanos tu proyecto</div>
+      </div>
+      <button onclick="closeModal()" style="
+        background:transparent;border:1px solid #333;color:var(--gray);
+        width:36px;height:36px;font-size:18px;cursor:none;
+        display:flex;align-items:center;justify-content:center;
+        transition:border-color 0.2s,color 0.2s;
+      " onmouseenter="this.style.borderColor='var(--orange)';this.style.color='var(--orange)'"
+         onmouseleave="this.style.borderColor='#333';this.style.color='var(--gray)'">✕</button>
+    </div>
+
+    <!-- Form -->
+    <div style="padding:32px 40px 40px;" id="formContainer">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:11px;letter-spacing:2px;color:var(--gray);display:block;margin-bottom:8px;text-transform:uppercase;">Nombre Personal *</label>
+          <input id="f_nombre" type="text" placeholder="Juan García" style="
+            width:100%;background:#111;border:1px solid #2a2a2a;color:var(--white);
+            padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;
+            outline:none;transition:border-color 0.2s;
+          " onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='#2a2a2a'">
+        </div>
+        <div>
+          <label style="font-size:11px;letter-spacing:2px;color:var(--gray);display:block;margin-bottom:8px;text-transform:uppercase;">Email *</label>
+          <input id="f_email" type="email" placeholder="juan@empresa.com" style="
+            width:100%;background:#111;border:1px solid #2a2a2a;color:var(--white);
+            padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;
+            outline:none;transition:border-color 0.2s;
+          " onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='#2a2a2a'">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:11px;letter-spacing:2px;color:var(--gray);display:block;margin-bottom:8px;text-transform:uppercase;">Nombre Empresa *</label>
+          <input id="f_empresa" type="text" placeholder="Mi Empresa S.L." style="
+            width:100%;background:#111;border:1px solid #2a2a2a;color:var(--white);
+            padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;
+            outline:none;transition:border-color 0.2s;
+          " onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='#2a2a2a'">
+        </div>
+        <div>
+          <label style="font-size:11px;letter-spacing:2px;color:var(--gray);display:block;margin-bottom:8px;text-transform:uppercase;">Sector *</label>
+          <select id="f_sector" style="
+            width:100%;background:#111;border:1px solid #2a2a2a;color:var(--white);
+            padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;
+            outline:none;transition:border-color 0.2s;appearance:none;cursor:none;
+          " onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='#2a2a2a'">
+            <option value="" style="background:#111">Selecciona sector...</option>
+            <option value="E-commerce / Retail" style="background:#111">E-commerce / Retail</option>
+            <option value="Tecnología / SaaS" style="background:#111">Tecnología / SaaS</option>
+            <option value="Finanzas / Banca" style="background:#111">Finanzas / Banca</option>
+            <option value="Salud / Sanidad" style="background:#111">Salud / Sanidad</option>
+            <option value="Inmobiliaria" style="background:#111">Inmobiliaria</option>
+            <option value="Marketing / Publicidad" style="background:#111">Marketing / Publicidad</option>
+            <option value="Logística / Transporte" style="background:#111">Logística / Transporte</option>
+            <option value="Educación" style="background:#111">Educación</option>
+            <option value="Hostelería / Turismo" style="background:#111">Hostelería / Turismo</option>
+            <option value="Industria / Manufactura" style="background:#111">Industria / Manufactura</option>
+            <option value="Consultoría" style="background:#111">Consultoría</option>
+            <option value="Otro" style="background:#111">Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:11px;letter-spacing:2px;color:var(--gray);display:block;margin-bottom:8px;text-transform:uppercase;">Teléfono *</label>
+        <input id="f_telefono" type="tel" placeholder="+34 600 000 000" style="
+          width:100%;background:#111;border:1px solid #2a2a2a;color:var(--white);
+          padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;
+          outline:none;transition:border-color 0.2s;
+        " onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='#2a2a2a'">
+      </div>
+
+      <div style="margin-bottom:28px;">
+        <label style="font-size:11px;letter-spacing:2px;color:var(--gray);display:block;margin-bottom:8px;text-transform:uppercase;">¿Para qué necesitas nuestros servicios? *</label>
+        <textarea id="f_mensaje" placeholder="Cuéntanos qué procesos quieres automatizar, qué problemas tienes actualmente y qué resultado esperas conseguir..." rows="4" style="
+          width:100%;background:#111;border:1px solid #2a2a2a;color:var(--white);
+          padding:12px 16px;font-family:'Syne',sans-serif;font-size:14px;
+          outline:none;transition:border-color 0.2s;resize:vertical;
+          line-height:1.6;
+        " onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='#2a2a2a'"></textarea>
+      </div>
+
+      <div id="formError" style="display:none;color:#FF4444;font-size:13px;margin-bottom:16px;font-family:'JetBrains Mono',monospace;"></div>
+
+      <button id="submitBtn" onclick="enviarFormulario()" style="
+        width:100%;background:var(--orange);color:var(--black);border:none;
+        padding:16px;font-family:'Syne',sans-serif;font-weight:800;
+        font-size:14px;letter-spacing:2px;text-transform:uppercase;
+        cursor:none;transition:background 0.2s,transform 0.1s;
+        clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+      " onmouseenter="this.style.background='var(--orange-bright)'"
+         onmouseleave="this.style.background='var(--orange)'">
+        Enviar →
+      </button>
+    </div>
+
+    <!-- Success state -->
+    <div id="successContainer" style="display:none;padding:60px 40px;text-align:center;">
+      <div style="font-size:56px;margin-bottom:20px;">✅</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--orange);margin-bottom:12px;">¡Mensaje Enviado!</div>
+      <div style="color:var(--gray);font-size:15px;line-height:1.7;margin-bottom:32px;">Hemos recibido tu consulta. Nuestro equipo se pondrá en contacto contigo en menos de 24 horas.</div>
+      <button onclick="closeModal()" style="
+        background:var(--orange);color:var(--black);border:none;
+        padding:14px 40px;font-family:'Syne',sans-serif;font-weight:800;
+        font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:none;
+      ">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+function openModal(plan) {
+  const modal = document.getElementById('contactModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  if (plan) {
+    const msg = document.getElementById('f_mensaje');
+    if (!msg.value) msg.value = `Plan de interés: ${plan}\n\n`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('contactModal').style.display = 'none';
+  document.body.style.overflow = '';
+  // Reset
+  document.getElementById('formContainer').style.display = 'block';
+  document.getElementById('successContainer').style.display = 'none';
+  document.getElementById('f_nombre').value = '';
+  document.getElementById('f_email').value = '';
+  document.getElementById('f_empresa').value = '';
+  document.getElementById('f_sector').value = '';
+  document.getElementById('f_telefono').value = '';
+  document.getElementById('f_mensaje').value = '';
+  document.getElementById('formError').style.display = 'none';
+  document.getElementById('submitBtn').textContent = 'Enviar →';
+  document.getElementById('submitBtn').disabled = false;
+}
+
+// Close on backdrop click
+document.getElementById('contactModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function enviarFormulario() {
+  const nombre = document.getElementById('f_nombre').value.trim();
+  const email = document.getElementById('f_email').value.trim();
+  const empresa = document.getElementById('f_empresa').value.trim();
+  const sector = document.getElementById('f_sector').value;
+  const telefono = document.getElementById('f_telefono').value.trim();
+  const mensaje = document.getElementById('f_mensaje').value.trim();
+  const errDiv = document.getElementById('formError');
+  const btn = document.getElementById('submitBtn');
+
+  errDiv.style.display = 'none';
+
+  if (!nombre || !email || !empresa || !sector || !telefono || !mensaje) {
+    errDiv.textContent = '⚠ Por favor rellena todos los campos antes de enviar.';
+    errDiv.style.display = 'block';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errDiv.textContent = '⚠ El email introducido no es válido.';
+    errDiv.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://formspree.io/f/mlgpvozg', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        _replyto: email,
+        _subject: `🚀 Nuevo Lead Bizsim.AI — ${nombre} (${empresa})`,
+        'Nombre': nombre,
+        'Email': email,
+        'Empresa': empresa,
+        'Sector': sector,
+        'Teléfono': telefono,
+        'Mensaje': mensaje
+      })
+    });
+
+    if (res.ok) {
+      showSuccess();
+    } else {
+      throw new Error('Formspree error');
+    }
+  } catch(err) {
+    // Fallback mailto por si hay bloqueo de red
+    const body = encodeURIComponent(
+      `NUEVO LEAD — BIZSIM.AI\n\nNombre: ${nombre}\nEmail: ${email}\nEmpresa: ${empresa}\nSector: ${sector}\nTeléfono: ${telefono}\n\nMensaje:\n${mensaje}`
+    );
+    window.location.href = `mailto:bizsim.iacristia@gmail.com?subject=${encodeURIComponent('Nuevo Lead Bizsim.AI - '+nombre)}&body=${body}`;
+    showSuccess();
+  }
+}
+
+function showSuccess() {
+  document.getElementById('formContainer').style.display = 'none';
+  document.getElementById('successContainer').style.display = 'block';
+}
+
+// Custom cursor
+
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 6 + 'px';
+  cursor.style.top = my - 6 + 'px';
+});
+
+function animateRing() {
+  rx += (mx - rx - 18) * 0.12;
+  ry += (my - ry - 18) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+// Scale cursor on hover
+document.querySelectorAll('button, a, .service-card, .feature-item').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'scale(2)';
+    ring.style.width = '56px';
+    ring.style.height = '56px';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'scale(1)';
+    ring.style.width = '36px';
+    ring.style.height = '36px';
+  });
+});
+
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
